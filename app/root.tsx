@@ -1,6 +1,6 @@
-import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction, LoaderArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { ClerkApp, ClerkCatchBoundary, } from "@clerk/remix";
+import type { MetaFunction, LoaderFunction } from "@remix-run/node";
+
 import {
   Links,
   LiveReload,
@@ -10,28 +10,33 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
-import { getUser } from "~/session.server";
-import stylesheet from "~/tailwind.css";
+import styles from "~/styles/global.css";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: stylesheet },
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
 
-export const loader = async ({ request }: LoaderArgs) => {
-  return json({ user: await getUser(request) });
-};
+import { rootAuthLoader } from "@clerk/remix/ssr.server";
+// Import ClerkApp
+// export const meta: MetaFunction = () => ({
+//   charset: "utf-8",
+//   title: "New Remix App",
+//   viewport: "width=device-width,initial-scale=1",
+// });
 
-export default function App() {
+export const loader: LoaderFunction = (args) => rootAuthLoader(args);
+export const CatchBoundary = ClerkCatchBoundary();
+
+export function links() {
+  return [{ rel: "stylesheet", href: styles }];
+}
+
+
+function App() {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en">
       <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body className="h-full">
+      <body>
         <Outlet />
         <ScrollRestoration />
         <Scripts />
@@ -40,3 +45,6 @@ export default function App() {
     </html>
   );
 }
+
+// Wrap your app in ClerkApp(app)
+export default ClerkApp(App);
